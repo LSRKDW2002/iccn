@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
+import Navbar from "../components/Navbar";
+import { FaArrowLeft } from "react-icons/fa";
+import { API_BASE_URL } from "../config";
 
 const MembershipRegistration = () => {
     const [formData, setFormData] = useState({
@@ -11,185 +15,290 @@ const MembershipRegistration = () => {
         address: "",
         region: "",
         personalName: "",
-        transferAmount: "", // Nilai dalam format rupiah untuk ditampilkan
-        transferAmountRaw: "", // Simpan angka asli tanpa format
-        whatsappNumber: "",
+        transferAmount: "",
+        transferAmountRaw: "",
+        whatsappGroupNumber: "",
         receiptName: "",
-        additionalReceiptName: "",
+        additionalRegistrations: "", // Opsional
         documentFile: null,
-        additionalRegistrations: "",
-        whatsappGroupNumber: "", // No WhatsApp untuk grup
     });
 
+    const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
-    const token = localStorage.getItem("authToken"); // Cek token dari localStorage
 
+    // Handle perubahan input text, select, dan number
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
+    // Handle perubahan file upload
     const handleFileChange = (e) => {
         setFormData({ ...formData, documentFile: e.target.files[0] });
     };
 
+    // Handle perubahan input jumlah transfer (format currency)
     const handleMoneyChange = (e) => {
-        let rawValue = e.target.value.replace(/[^\d]/g, ""); // Hapus semua karakter non-digit
-
-        // Jika nilai kosong, reset state
+        let rawValue = e.target.value.replace(/[^\d]/g, "");
         if (!rawValue) {
-            setFormData({
-                ...formData,
-                transferAmount: "",
-                transferAmountRaw: ""
-            });
+            setFormData({ ...formData, transferAmount: "", transferAmountRaw: "" });
             return;
         }
 
-        // Format angka menggunakan Intl.NumberFormat
         const numericValue = parseInt(rawValue, 10);
         const formattedValue = new Intl.NumberFormat("id-ID", {
             style: "currency",
             currency: "IDR",
             minimumFractionDigits: 0,
-            maximumFractionDigits: 0
+            maximumFractionDigits: 0,
         }).format(numericValue);
 
-        setFormData({
-            ...formData,
-            transferAmount: formattedValue,
-            transferAmountRaw: rawValue
-        });
+        setFormData({ ...formData, transferAmount: formattedValue, transferAmountRaw: rawValue });
     };
 
-    const handleSubmit = (e) => {
+    // Validasi form
+    const validateForm = () => {
+        let newErrors = {};
+        if (!formData.userType) newErrors.userType = "Tipe Keanggotaan wajib diisi!";
+        if (!formData.institutionName) newErrors.institutionName = "Nama Institusi wajib diisi!";
+        if (!formData.email) newErrors.email = "Email wajib diisi!";
+        if (!formData.address) newErrors.address = "Alamat wajib diisi!";
+        if (!formData.region) newErrors.region = "Wilayah wajib diisi!";
+        if (!formData.personalName) newErrors.personalName = "Nama Personal wajib diisi!";
+        if (!formData.transferAmountRaw) newErrors.transferAmount = "Jumlah Transfer wajib diisi!";
+        if (!formData.whatsappGroupNumber) newErrors.whatsappGroupNumber = "Nomor WhatsApp wajib diisi!";
+        if (!formData.receiptName) newErrors.receiptName = "Nama pada Kuitansi wajib diisi!";
+        if (!formData.documentFile) newErrors.documentFile = "Dokumen SK wajib diupload!";
+
+        // Pendaftaran tambahan (additionalRegistrations) bersifat opsional, tidak perlu divalidasi
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Handle submit form
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        navigate("/invoice", { state: { membershipData: formData } });
+        if (!validateForm()) {
+            console.log("Validasi gagal", errors); // Debugging
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        const formDataToSend = new FormData();
+        const user_id = localStorage.getItem("user_id");
+
+        // Mapping field frontend ke backend
+        formDataToSend.append("user_id", user_id);
+        formDataToSend.append("tipe_keanggotaan", formData.userType);
+        formDataToSend.append("institusi", formData.institutionName);
+        formDataToSend.append("website", formData.websiteLink);
+        formDataToSend.append("email", formData.email);
+        formDataToSend.append("alamat", formData.address);
+        formDataToSend.append("wilayah", formData.region);
+        formDataToSend.append("nama_pembayar", formData.personalName);
+        formDataToSend.append("nominal_transfer", formData.transferAmountRaw);
+        formDataToSend.append("nomor_wa", formData.whatsappGroupNumber);
+        formDataToSend.append("nama_kuitansi", formData.receiptName);
+        formDataToSend.append("additional_members_info", formData.additionalRegistrations || ""); // Opsional, default kosong
+        formDataToSend.append("file_sk", formData.documentFile);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/register-member`, {
+                method: "POST",
+                body: formDataToSend,
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+
+            const data = await response.json();
+            console.log("Response dari backend:", data); // Debugging
+
+            if (!response.ok) {
+                throw new Error(data.message || "Gagal mendaftar member");
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil!",
+                text: "Pendaftaran member berhasil, menunggu verifikasi",
+            }).then(() => {
+                navigate("/upload", { state: { membershipData: data } });
+            });
+        } catch (error) {
+            console.error("Error saat submit:", error); // Debugging
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: error.message || "Terjadi kesalahan saat mendaftar",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-200 to-blue-500 p-8">
-            <motion.div
-                initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-6xl bg-white shadow-lg rounded-xl flex overflow-hidden"
-            >
-                {/* Bagian Kiri */}
-                <div className="w-2/5 p-12 bg-blue-700 text-white flex flex-col justify-center">
-                    <h2 className="text-4xl font-extrabold mb-4">Bergabung Sekarang!</h2>
-                    <p className="text-lg leading-relaxed mb-4">
-                        Daftarkan institusi atau perusahaan Anda dan dapatkan akses eksklusif ke komunitas kami!
-                    </p>
-
-                    {/* Hanya tampilkan tombol login jika user belum login */}
-                    {!token && (
-                        <button className="mt-6 px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-gray-100 transition">
-                            Sudah punya akun? Masuk
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
+            <Navbar />
+            <div className="flex items-center justify-center min-h-screen p-20 pt-28">
+                <motion.div
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-7xl bg-white shadow-lg rounded-xl flex overflow-hidden"
+                >
+                    {/* Bagian Kiri */}
+                    <div className="w-2/5 p-12 bg-blue-700 text-white flex flex-col justify-center relative">
+                        <button
+                            onClick={() => navigate("/home")}
+                            className="absolute top-4 left-4 flex items-center text-white hover:text-blue-300 transition-all"
+                        >
+                            <FaArrowLeft size={20} className="mr-2" />
                         </button>
-                    )}
-                </div>
 
-                {/* Bagian Kanan */}
-                <div className="w-3/5 p-12">
-                    <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-                        Formulir Pendaftaran Membership
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-2 gap-6">
-                            {/* Tipe Keanggotaan */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Tipe Keanggotaan</label>
-                                <select name="userType" value={formData.userType} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300">
-                                    <option value="">Pilih...</option>
-                                    <option value="Universitas">Universitas</option>
-                                    <option value="Perusahaan">Perusahaan</option>
-                                    <option value="Individu">Individu/Pribadi</option>
-                                </select>
-                            </div>
+                        <h2 className="text-4xl font-extrabold mb-4">Bergabung Sekarang!</h2>
+                        <p className="text-lg leading-relaxed mb-4">
+                            Daftarkan institusi atau perusahaan Anda dan dapatkan akses eksklusif ke komunitas kami!
+                        </p>
 
-                            {/* Nama Institusi */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Nama Institusi / Perusahaan</label>
-                                <input type="text" name="institutionName" value={formData.institutionName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Masukkan nama institusi atau perusahaan Anda" />
-                            </div>
+                        <div className="mt-6 px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-gray-100 transition text-center">
+                            Isi Formulir di samping ya!
                         </div>
+                    </div>
 
-                        {/* Link Website & Email */}
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Link Website</label>
-                                <input type="text" name="websiteLink" value={formData.websiteLink} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="https://example.com" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Email</label>
-                                <input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="contoh@email.com" />
-                            </div>
-                        </div>
+                    {/* Bagian Kanan */}
+                    <div className="w-3/5 p-8">
+                        <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+                            Formulir Pendaftaran Membership
+                        </h2>
+                        <form className="space-y-5">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Tipe Keanggotaan</label>
+                                    <select
+                                        name="userType"
+                                        value={formData.userType}
+                                        onChange={handleChange} // Pastikan handleChange bekerja dengan benar
+                                        className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300"
+                                    >
+                                        <option value="">Pilih...</option>
+                                        <option value="Universitas">Universitas</option>
+                                        <option value="Perusahaan">Perusahaan</option>
+                                        <option value="Individu">Individu/Pribadi</option>
+                                    </select>
+                                </div>
 
-                        {/* Alamat & Wilayah */}
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Alamat</label>
-                                <input type="text" name="address" value={formData.address} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Alamat lengkap institusi/perusahaan" />
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Nama Institusi / Perusahaan / Individu</label>
+                                    <input type="text" name="institutionName" value={formData.institutionName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Masukkan nama institusi, perusahaan, atau individu" />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Wilayah</label>
-                                <input type="text" name="region" value={formData.region} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Provinsi/Kota" />
-                            </div>
-                        </div>
 
-                        {/* Nama Personal */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600">Nama Personal</label>
-                            <input type="text" name="personalName" value={formData.personalName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Masukkan nama Anda" />
-                        </div>
-
-                        {/* Nama Kuitansi & Jumlah Transfer */}
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Nama pada Kuitansi</label>
-                                <input type="text" name="receiptName" value={formData.receiptName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Nama yang muncul di kuitansi" />
+                            {/* Link Website & Email */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Link Website</label>
+                                    <input type="text" name="websiteLink" value={formData.websiteLink} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="https://example.com" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Email</label>
+                                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="contoh@email.com" />
+                                </div>
                             </div>
+
+                            {/* Alamat & Wilayah */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Alamat</label>
+                                    <input type="text" name="address" value={formData.address} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Alamat lengkap institusi/perusahaan" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Wilayah</label>
+                                    <input type="text" name="region" value={formData.region} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Provinsi/Kota" />
+                                </div>
+                            </div>
+
+                            {/* Nama Personal */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-600">Jumlah Transfer</label>
+                                <label className="block text-sm font-medium text-gray-600">
+                                    Nama Personal <span className="text-red-500">*</span>
+                                </label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Nama Personal yang dibayarkan iuran keanggotaan ICCN
+                                </p>
+                                <input type="text" name="personalName" value={formData.personalName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Masukkan nama Anda" />
+                            </div>
+
+                            {/* Nama Kuitansi & Jumlah Transfer */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Nama pada Kuitansi</label>
+                                    <input type="text" name="receiptName" value={formData.receiptName} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Nama yang muncul di kuitansi" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">Jumlah Transfer</label>
+                                    <input
+                                        type="text"
+                                        name="transferAmount"
+                                        value={formData.transferAmount}
+                                        onChange={handleMoneyChange}
+                                        className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300"
+                                        placeholder="Rp 0"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                {/* No WhatsApp untuk Grup */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">
+                                        Nomor Whatsapp <span className="text-red-500">*</span>
+                                    </label>
+                                    <p className="text-xs text-gray-500 mb-2">
+                                        yang akan dimasukkan kedalam group WA
+                                    </p>
+                                    <input type="text" name="whatsappGroupNumber" value={formData.whatsappGroupNumber} onChange={handleChange} className="mt-6 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Contoh: 081234567890" />
+                                </div>
+
+                                {/* Form Pendaftaran Tambahan (Opsional) */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600">
+                                        Pendaftaran Tambahan (Opsional) <span className="text-red-500">*</span>
+                                    </label>
+                                    <p className="text-xs text-gray-500 mb-2">
+                                        Silahkan diisi jika mendaftar lebih dari satu. Nama yang ditulis pada kuitansi atas nama siapa?
+                                    </p>
+                                    <input type="text" name="additionalRegistrations" value={formData.additionalRegistrations} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Nama tambahan jika ada" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600">Upload Dokumen</label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Upload SK Pengelola Pusat Karir / Surat Tugas / Surat Pernyataan / SK Delegasi dari Perusahaan
+                                </p>
                                 <input
-                                    type="text"
-                                    name="transferAmount"
-                                    value={formData.transferAmount}
-                                    onChange={handleMoneyChange}
+                                    type="file"
+                                    name="documentFile"
+                                    onChange={handleFileChange}
                                     className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300"
-                                    placeholder="Rp 0"
                                 />
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-6">
-                            {/* No WhatsApp untuk Grup */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Nomor WhatsApp untuk Grup</label>
-                                <input type="text" name="whatsappGroupNumber" value={formData.whatsappGroupNumber} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Contoh: 081234567890" />
-                            </div>
-
-                            {/* Form Pendaftaran Tambahan (Opsional) */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600">Pendaftaran Tambahan (Opsional)</label>
-                                <input type="text" name="additionalRegistrations" value={formData.additionalRegistrations} onChange={handleChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" placeholder="Nama tambahan jika ada" />
-                            </div>
-                        </div>
-
-                        {/* Upload File */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600">Upload Dokumen</label>
-                            <input type="file" name="documentFile" onChange={handleFileChange} className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300" />
-                        </div>
-
-                        <button className="w-full py-3 mt-6 text-white bg-blue-700 rounded-md hover:bg-teal-800 transition">
-                            Daftar Sekarang
-                        </button>
-                    </form>
-                </div>
-            </motion.div>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="w-full py-3 mt-6 text-white bg-blue-700 rounded-md hover:bg-sky-800 hover:scale-105 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? "Mengirim..." : "Daftar Sekarang"}
+                            </button>
+                        </form>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 };

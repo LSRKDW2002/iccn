@@ -5,7 +5,7 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-10 shadow-lg">
+        <header className="relative top-0 left-0 right-0 z-10 shadow-lg">
             <div className="relative bg-white opacity-80 h-full">
                 {/* Purple Design Section (Di Sebelah Kanan) */}
                 <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900 clip-path-trapezoid-reverse"></div>

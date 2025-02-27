@@ -8,6 +8,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, activeMenu }) {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem("role");
         navigate('/login');
     };
 

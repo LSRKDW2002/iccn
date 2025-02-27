@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
+import { motion } from "framer-motion";
+import Navbar from "../components/Navbar";
 
 export default function Register() {
     const [username, setUsername] = useState("");
@@ -10,6 +12,7 @@ export default function Register() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [countdown, setCountdown] = useState(10);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -39,9 +42,7 @@ export default function Register() {
             const data = await response.json();
             if (response.ok) {
                 setSuccess(true);
-                setTimeout(() => {
-                    navigate("/login");
-                }, 10000);
+                setTimeout(() => navigate("/login"), 10000);
             } else {
                 setError(data.message || "Registrasi gagal!");
             }
@@ -53,35 +54,52 @@ export default function Register() {
 
     useEffect(() => {
         if (success) {
-            const timer = setInterval(() => {
-                setCountdown((prev) => prev - 1);
-            }, 1000);
-
+            const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
             return () => clearInterval(timer);
         }
     }, [success]);
 
     if (success) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-200 to-blue-700">
-                <div className="backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30 text-white text-center">
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
+                <Navbar />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30 text-white text-center"
+                >
                     <h2 className="text-2xl font-bold mb-4">Daftar Berhasil</h2>
                     <p className="text-sm text-gray-300">
-                        Silakan verifikasi email Anda terlebih dahulu untuk melanjutkan ke login.
-                        Jika sudah verifikasi melalui email, silakan login untuk melanjutkan.
+                        Silakan verifikasi email Anda untuk melanjutkan ke login.
+                        Jika sudah verifikasi, silakan login.
                     </p>
                     <p className="text-sm text-gray-300 mt-4">
                         Anda akan dialihkan ke halaman login dalam{" "}
                         <span className="font-bold text-blue-300">{countdown}</span> detik...
                     </p>
-                </div>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-200 to-blue-700">
-            <div className="backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
+            <Navbar />
+            <motion.div
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30"
+            >
+                {/* Tombol Kembali (Arrow Back) */}
+                <button
+                    onClick={() => navigate("/")}
+                    className="absolute top-4 left-4 text-white hover:text-blue-300 transition-all"
+                >
+                    <FaArrowLeft size={20} />
+                </button>
+
                 <h2 className="text-3xl font-bold text-center text-white mb-6">Daftar</h2>
 
                 {error && <p className="text-red-400 text-center mb-4 text-sm">{error}</p>}
@@ -114,30 +132,37 @@ export default function Register() {
                     <div className="relative">
                         <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             placeholder="Password"
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            className="w-full pl-10 pr-12 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                        <button
+                            type="button"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
-                    <button
+                    <motion.button
                         type="submit"
-                        className="w-full py-2 text-white font-semibold bg-gradient-to-t from-blue-600 to-blue-400 rounded-lg hover:scale-105 transition-transform"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full py-2 text-white font-semibold bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg hover:shadow-lg transition-transform"
                     >
                         Register
-                    </button>
+                    </motion.button>
                 </form>
 
                 <p className="text-center text-white mt-4">
                     Sudah punya akun?{" "}
-                    <a href="/login" className="text-blue-700 font-bold hover:underline">
-                        Login
-                    </a>
+                    <a href="/login" className="text-blue-300 font-bold hover:underline">Login</a>
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 }

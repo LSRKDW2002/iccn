@@ -5,68 +5,61 @@ import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import MemberDashboard from "./pages/MemberDashboard";
 import MembershipRegistration from "./pages/MembershipRegistration";
-import Invoice from "./pages/Invoice";
-import Payment from "./pages/Payment";
-import PaymentStatus from "./pages/PaymentStatus";
 import Upload from "./pages/Upload";
 import LoggedInPage from "./pages/LoggedInPage";
 
+function ProtectedRoute({ children, allowedRoles }) {
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
+  const isVerified = parseInt(localStorage.getItem("is_verified"), 10);
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (isVerified === 0) return <Navigate to="/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(userRole)) return <Navigate to="/home" replace />;
+
+  return children;
+}
 
 function App() {
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role"); // Simpan role: "admin" atau "member"
-
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
 
-        {/* Private Routes */}
-        <Route
-          path="/home"
-          // element={token ? <LoggedInPage /> : <Navigate to="/login" replace />}
-        element={<LoggedInPage />}
-        />
-        <Route
-          path="/member"
-          // element={token ? <MemberDashboard /> : <Navigate to="/login" replace />}
-        element={<MemberDashboard />}
-        />
-        <Route
-          path="/membership-registration"
-          element={token ? <MembershipRegistration /> : <Navigate to="/login" replace />}
-        // element={<MembershipRegistration />}
-        />
-        <Route
-          path="/invoice"
-          // element={token ? <Invoice /> : <Navigate to="/login" replace />}
-          element={<Invoice />}
-        />
-        <Route
-          path="/payment"
-          // element={token ? <Payment /> : <Navigate to="/login" replace />}
-          element={<Payment />}
-        />
-        <Route
-          path="/payment-status"
-          // element={token ? <PaymentStatus /> : <Navigate to="/login" replace />}
-          element={<PaymentStatus />}
-        />
-        <Route
-          path="/upload"
-          // element={token ? <Upload /> : <Navigate to="/login" replace />}
-          element={<Upload />}
-        />
+        <Route path="/membership-registration" element={
+          <ProtectedRoute>
+            <MembershipRegistration />
+          </ProtectedRoute>
+        } />
 
-        {/* Admin Route */}
-        <Route
-          path="/admin" element={<AdminPanel />}
-        // element={token && userRole === "admin" ? <AdminPanel /> : <Navigate to="/home" replace />}
-        />
+        <Route path="/home" element={
+          <ProtectedRoute>
+            <LoggedInPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/member" element={
+          <ProtectedRoute allowedRoles={["member"]}>
+            <MemberDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/upload" element={
+          <ProtectedRoute allowedRoles={["member"]}>
+            <Upload />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminPanel />
+          </ProtectedRoute>
+        } />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

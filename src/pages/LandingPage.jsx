@@ -35,6 +35,10 @@ const LandingPage = () => {
         navigate("/");
     };
 
+    const handleGetStarted = () => {
+        navigate("/login");
+    };
+
     return (
         <div className="bg-gradient-to-br from-blue-900 via-blue-600 to-blue-400 min-h-screen">
             {/* Navbar */}
@@ -51,32 +55,32 @@ const LandingPage = () => {
                         {/* Navigation Menu */}
                         <ul className="flex space-x-8 font-semibold text-gray-700 z-20">
                             <li>
-                                <button 
-                                    onClick={() => navigate("/home")} 
+                                <button
+                                    onClick={() => navigate("/home")}
                                     className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
                                 >
                                     Home
                                 </button>
                             </li>
                             <li>
-                                <button 
-                                    onClick={() => navigate("/services")} 
+                                <button
+                                    onClick={() => navigate("/services")}
                                     className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
                                 >
                                     Service
                                 </button>
                             </li>
                             <li>
-                                <button 
-                                    onClick={() => navigate("/contact")} 
+                                <button
+                                    onClick={() => navigate("/contact")}
                                     className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
                                 >
                                     Contact Us
                                 </button>
                             </li>
                             <li>
-                                <button 
-                                    onClick={() => navigate("/projects")} 
+                                <button
+                                    onClick={() => navigate("/projects")}
                                     className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
                                 >
                                     Our Projects
@@ -88,7 +92,7 @@ const LandingPage = () => {
                             {isLoggedIn ? (
                                 <>
                                     <span className="text-purple-600 font-medium">Hi, {userData?.name}</span>
-                                    <button 
+                                    <button
                                         onClick={handleLogout}
                                         className="bg-white text-purple-600 px-6 py-2 rounded-xl hover:bg-gray-50 transition-all shadow-lg font-bold border-2 border-purple-100"
                                     >
@@ -96,8 +100,8 @@ const LandingPage = () => {
                                     </button>
                                 </>
                             ) : (
-                                <button 
-                                    onClick={() => navigate("/login")} 
+                                <button
+                                    onClick={() => navigate("/login")}
                                     className="bg-gradient-to-b from-blue-600 to-blue-500 text-white px-4 py-1 rounded-xl transition-all 
                                             shadow-white shadow-md font-bold 
                                             hover:scale-105 hover:shadow-sm hover:shadow-white hover:shadow-opacity-30 
@@ -128,8 +132,20 @@ const LandingPage = () => {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="mt-4 text-xl text-center text-gray-100 max-w-2xl leading-relaxed"
                     >
-                        Transform your digital experience with our innovative solutions. Start your journey with us today!
+                        Transform your digital experience with our innovative solutions. Start your journey with us today
                     </motion.p>
+                    <motion.button
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mt-4 text-xl text-center text-gray-100 max-w-2xl leading-relaxed"
+                    >
+
+                        <button onClick={handleGetStarted} className="mt-6 bg-sky-500 text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 duration-200">
+                            Daftar Member
+                        </button>
+                    </motion.button>
+
                 </section>
             </main>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import { motion } from "framer-motion";
 
@@ -9,6 +9,7 @@ export default function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -24,17 +25,38 @@ export default function Login() {
 
             const data = await response.json();
 
-            if (response.status === 403 && data.is_verified === 0) {
-                setError("Akun ini belum memverifikasi email.");
+            if (!response.ok) {
+                setError(data.message || "Terjadi kesalahan. Silakan coba lagi.");
                 return;
             }
 
-            if (response.ok) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("role", data.role || "member");
-                navigate("/home");
-            } else {
-                setError(data.message || "Terjadi kesalahan. Silakan coba lagi.");
+            const token = data.token;
+            localStorage.setItem("token", token);
+
+            try {
+                // Decode JWT dengan aman
+                const decoded = JSON.parse(atob(token.split(".")[1]));
+                const { id, role, is_verified } = decoded;
+
+                // Simpan data user ke localStorage
+                localStorage.setItem("user_id", id);
+                localStorage.setItem("role", role);
+                localStorage.setItem("is_verified", is_verified.toString());
+
+                if (is_verified === 0) {
+                    setError("Akun ini belum memverifikasi email.");
+                    return;
+                }
+
+                // Redirect berdasarkan role
+                if (role === "admin") {
+                    navigate("/admin");
+                } else {
+                    navigate("/home");
+                }
+            } catch (decodeError) {
+                setError("Token tidak valid.");
+                localStorage.removeItem("token");
             }
         } catch (error) {
             console.error("Error:", error);
@@ -43,16 +65,23 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-600 to-blue-400">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
             <Navbar />
 
-            <motion.div 
-                initial={{ opacity: 0, y: -50 }} 
-                animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="flex items-center justify-center h-screen"
             >
-                <div className="backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30">
+                <div className="relative backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30">
+                    <button
+                        onClick={() => navigate("/")}
+                        className="absolute top-4 left-4 text-white hover:text-blue-300 transition-all"
+                    >
+                        <FaArrowLeft size={20} />
+                    </button>
+
                     <h2 className="text-3xl font-bold text-center text-white mb-6">Login</h2>
 
                     {error && <p className="text-red-400 text-center mb-4 text-sm">{error}</p>}
@@ -73,13 +102,20 @@ export default function Login() {
                         <div className="relative">
                             <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder="Password"
-                                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                className="w-full pl-10 pr-12 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
+                            <button
+                                type="button"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
                         </div>
 
                         <motion.button
