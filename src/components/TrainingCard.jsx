@@ -21,7 +21,7 @@ export default function TrainingCard({ title, progress, date, status, onRegister
     return (
         <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100"
+            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:bg-gray-800"
         >
             <div className="p-6">
                 <div className={`${statusConfig[status].color} inline-flex items-center px-3 py-1 rounded-full text-sm`}>
@@ -30,11 +30,11 @@ export default function TrainingCard({ title, progress, date, status, onRegister
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-800 mt-4">{title}</h3>
-                <p className="text-gray-600 mt-2">Mulai: {date}</p>
+                <p className="text-gray-600 mt-2 dark:text-white">Mulai: {date}</p>
 
                 {status === 'active' && (
                     <div className="mt-4">
-                        <div className="flex justify-between text-sm font-medium text-gray-700">
+                        <div className="flex justify-between text-sm font-medium text-gray-700 dark:text-white">
                             <span>Progress</span>
                             <span>{progress}%</span>
                         </div>

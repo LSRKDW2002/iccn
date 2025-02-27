@@ -28,13 +28,13 @@ function App() {
         {/* Private Routes */}
         <Route
           path="/home"
-          element={token ? <LoggedInPage /> : <Navigate to="/login" replace />}
-        // element={<LoggedInPage />}
+          // element={token ? <LoggedInPage /> : <Navigate to="/login" replace />}
+        element={<LoggedInPage />}
         />
         <Route
           path="/member"
-          element={token ? <MemberDashboard /> : <Navigate to="/login" replace />}
-        // element={<MemberDashboard />}
+          // element={token ? <MemberDashboard /> : <Navigate to="/login" replace />}
+        element={<MemberDashboard />}
         />
         <Route
           path="/membership-registration"

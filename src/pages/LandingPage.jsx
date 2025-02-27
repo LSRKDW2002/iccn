@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const LandingPage = () => {
@@ -35,84 +35,101 @@ const LandingPage = () => {
         navigate("/");
     };
 
-    const handleGetStarted = () => {
-        if (isLoggedIn) {
-            navigate("/member"); // Arahkan ke dashboard member jika sudah login
-        } else {
-            navigate("/login");
-        }
-    };
-
-    const scrollToSection = (id) => {
-        const section = document.getElementById(id);
-        if (section) {
-            section.scrollIntoView({ behavior: "smooth" });
-        }
-    };
-
     return (
-        <div className="bg-gradient-to-t from-gray-50 to-blue-600 min-h-screen">
-            {/* Header */}
-            <header className="fixed top-0 left-0 right-0 bg-white bg-opacity-80 shadow-sm z-10">
-                <nav className="container mx-auto flex justify-between items-center p-4">
-                    <div className="text-4xl font-bold text-blue-700">ICCN</div>
-                    <div>
-                        <ul className="flex space-x-6 items-center">
+        <div className="bg-gradient-to-br from-blue-900 via-blue-600 to-blue-400 min-h-screen">
+            {/* Navbar */}
+            <header className="fixed top-0 left-0 right-0 z-10 shadow-lg">
+                <div className="relative bg-white opacity-80 h-full">
+                    {/* Purple Design Section (Di Sebelah Kanan) */}
+                    <div className="absolute right-0 top-0 h-full w-64 bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900 clip-path-trapezoid-reverse"></div>
+
+                    {/* Nav Content */}
+                    <nav className="w-full px-10 flex justify-between items-center p-4 relative">
+                        {/* Logo */}
+                        <div className="text-4xl font-bold text-blue-700 z-20">ICCN</div>
+
+                        {/* Navigation Menu */}
+                        <ul className="flex space-x-8 font-semibold text-gray-700 z-20">
                             <li>
-                                <button onClick={() => scrollToSection("home")} className="text-blue-700 font-bold hover:text-cyan-300 hover:underline transition duration-300">
+                                <button 
+                                    onClick={() => navigate("/home")} 
+                                    className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
+                                >
                                     Home
                                 </button>
                             </li>
                             <li>
-                                <button onClick={() => scrollToSection("services")} className="text-blue-700 font-bold hover:text-cyan-300 hover:underline transition duration-300">
-                                    Services
+                                <button 
+                                    onClick={() => navigate("/services")} 
+                                    className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
+                                >
+                                    Service
                                 </button>
                             </li>
                             <li>
-                                <button onClick={() => scrollToSection("about")} className="text-blue-700 font-bold hover:text-cyan-300 hover:underline transition duration-300">
-                                    About
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={() => scrollToSection("contact")} className="text-blue-700 font-bold hover:text-cyan-300 hover:underline transition duration-300">
+                                <button 
+                                    onClick={() => navigate("/contact")} 
+                                    className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
+                                >
                                     Contact Us
                                 </button>
                             </li>
-                            <li className="flex space-x-4">
-                                <Link to="/register" className="bg-cyan-400 text-gray-200 px-4 py-2 rounded hover:bg-cyan-800 transition duration-300">
-                                    Register
-                                </Link>
-                                <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
-                                    Login
-                                </Link>
+                            <li>
+                                <button 
+                                    onClick={() => navigate("/projects")} 
+                                    className="px-2 hover:text-white hover:bg-gradient-to-b from-blue-600 to-blue-500 hover:scale-105 rounded-md duration-200"
+                                >
+                                    Our Projects
+                                </button>
                             </li>
                         </ul>
-                    </div>
-                </nav>
+                        {/* Auth Button */}
+                        <div className="z-20 relative flex items-center space-x-6">
+                            {isLoggedIn ? (
+                                <>
+                                    <span className="text-purple-600 font-medium">Hi, {userData?.name}</span>
+                                    <button 
+                                        onClick={handleLogout}
+                                        className="bg-white text-purple-600 px-6 py-2 rounded-xl hover:bg-gray-50 transition-all shadow-lg font-bold border-2 border-purple-100"
+                                    >
+                                        Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    onClick={() => navigate("/login")} 
+                                    className="bg-gradient-to-b from-blue-600 to-blue-500 text-white px-4 py-1 rounded-xl transition-all 
+                                            shadow-white shadow-md font-bold 
+                                            hover:scale-105 hover:shadow-sm hover:shadow-white hover:shadow-opacity-30 
+                                            hover:from-blue-700 hover:to-blue-600 duration-200"
+                                >
+                                    Sign In
+                                </button>
+                            )}
+                        </div>
+                    </nav>
+                </div>
             </header>
 
             {/* Main Content */}
-            <main className="pt-20">
-                <section
-                    id="home"
-                    className="flex flex-col items-center justify-center h-screen text-gray-800 bg-[url('/path/to/hero-bg.jpg')] bg-cover bg-center"
-                >
-                    <motion.h1 initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-5xl text-white font-bold text-center">
+            <main className="pt-28">
+                <section id="home" className="flex flex-col items-center justify-center h-screen text-gray-800 px-4">
+                    <motion.h1
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-6xl text-white font-bold text-center mb-6"
+                    >
                         Welcome to ICCN
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="mt-4 text-lg text-center text-gray-100"
+                        className="mt-4 text-xl text-center text-gray-100 max-w-2xl leading-relaxed"
                     >
-                        Your journey starts here. Explore our services and get started today!
+                        Transform your digital experience with our innovative solutions. Start your journey with us today!
                     </motion.p>
-
-                    {/* Tombol Get Started */}
-                    <button onClick={handleGetStarted} className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition duration-300">
-                        Create Your Account Now!
-                    </button>
                 </section>
             </main>
         </div>
