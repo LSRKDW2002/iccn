@@ -38,6 +38,11 @@ const MembershipRegistration = () => {
         setFormData({ ...formData, documentFile: e.target.files[0] });
     };
 
+    // Handle bukti pembayaran
+    const handleBuktiBayar = (e) => {
+        setFormData({ ...formData, pembayaranBukti: e.target.files[0] });
+    };
+
     // Handle perubahan input jumlah transfer (format currency)
     const handleMoneyChange = (e) => {
         let rawValue = e.target.value.replace(/[^\d]/g, "");
@@ -69,7 +74,7 @@ const MembershipRegistration = () => {
         if (!formData.transferAmountRaw) newErrors.transferAmount = "Jumlah Transfer wajib diisi!";
         if (!formData.whatsappGroupNumber) newErrors.whatsappGroupNumber = "Nomor WhatsApp wajib diisi!";
         if (!formData.receiptName) newErrors.receiptName = "Nama pada Kuitansi wajib diisi!";
-        if (!formData.documentFile) newErrors.documentFile = "Dokumen SK wajib diupload!";
+        if (!formData.documentFile) newErrors.documentFile = "Dokumen SK dan Bukti Pembayaran wajib diupload!";
 
         // Pendaftaran tambahan (additionalRegistrations) bersifat opsional, tidak perlu divalidasi
 
@@ -81,16 +86,35 @@ const MembershipRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) {
-            console.log("Validasi gagal", errors); // Debugging
+            Swal.fire({
+                icon: "warning",
+                title: "Form Belum Lengkap!",
+                text: "Harap isi semua bidang yang wajib diisi!",
+            });
             return;
         }
 
+        Swal.fire({
+            title: "Apakah Anda Sudah Yakin?",
+            text: "Silahkan periksa kembali jika ada yang salah",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Lanjutkan",
+            cancelButtonText: "Cek Kembali",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitForm();
+            }
+        });
+    };
+
+    // Fungsi submitForm() untuk mengirimkan data
+    const submitForm = async () => {
         setIsSubmitting(true);
 
         const formDataToSend = new FormData();
         const user_id = localStorage.getItem("user_id");
 
-        // Mapping field frontend ke backend
         formDataToSend.append("user_id", user_id);
         formDataToSend.append("tipe_keanggotaan", formData.userType);
         formDataToSend.append("institusi", formData.institutionName);
@@ -102,8 +126,9 @@ const MembershipRegistration = () => {
         formDataToSend.append("nominal_transfer", formData.transferAmountRaw);
         formDataToSend.append("nomor_wa", formData.whatsappGroupNumber);
         formDataToSend.append("nama_kuitansi", formData.receiptName);
-        formDataToSend.append("additional_members_info", formData.additionalRegistrations || ""); // Opsional, default kosong
+        formDataToSend.append("additional_members_info", formData.additionalRegistrations || "");
         formDataToSend.append("file_sk", formData.documentFile);
+        formDataToSend.append("bukti_pembayaran", formData.pembayaranBukti);
 
         try {
             const response = await fetch(`${API_BASE_URL}/members/register-member`, {
@@ -115,7 +140,6 @@ const MembershipRegistration = () => {
             });
 
             const data = await response.json();
-            console.log("Response dari backend:", data); // Debugging
 
             if (!response.ok) {
                 throw new Error(data.message || "Gagal mendaftar member");
@@ -129,7 +153,6 @@ const MembershipRegistration = () => {
                 navigate("/upload", { state: { membershipData: data } });
             });
         } catch (error) {
-            console.error("Error saat submit:", error); // Debugging
             Swal.fire({
                 icon: "error",
                 title: "Gagal",
@@ -182,7 +205,7 @@ const MembershipRegistration = () => {
                                         name="userType"
                                         value={formData.userType}
                                         onChange={handleChange} // Pastikan handleChange bekerja dengan benar
-                                        className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300"
+                                        className="mt-1 block w-full p-3 text-gray-400 border rounded-md focus:ring focus:ring-blue-300"
                                     >
                                         <option value="">Pilih...</option>
                                         <option value="Universitas">Universitas</option>
@@ -284,7 +307,20 @@ const MembershipRegistration = () => {
                                     type="file"
                                     name="documentFile"
                                     onChange={handleFileChange}
-                                    className="mt-1 block w-full p-3 border rounded-md focus:ring focus:ring-blue-300"
+                                    className="mt-1 block w-full p-3 text-gray-400 border rounded-md focus:ring focus:ring-blue-300"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600">Upload Bukti Pembayaran</label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Silahkan Upload Bukti Pembayaran Yang Sudah Anda Lakukan!
+                                </p>
+                                <input
+                                    type="file"
+                                    name="pembayaranBukti"
+                                    onChange={handleBuktiBayar}
+                                    className="mt-1 block w-full p-3 text-gray-400 border rounded-md focus:ring focus:ring-blue-300"
                                 />
                             </div>
 

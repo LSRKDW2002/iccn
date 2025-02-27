@@ -6,7 +6,7 @@ export default function Sidebar({ isAdmin, sidebarOpen, activeMenu, setActiveMen
         { name: 'Aktivasi Member', icon: FiUsers },
         { name: 'Kelola Berita', icon: FiFileText },
         { name: 'Galeri Kegiatan', icon: FiImage },
-        { name: 'Laporan Member', icon: FiUsers },
+        // { name: 'Laporan Member', icon: FiUsers },
         { name: 'Laporan Keuangan', icon: FiDollarSign },
         { name: 'Pengeluaran', icon: FiDollarSign },
         { name: 'Akunting', icon: FiDollarSign },
@@ -34,8 +34,8 @@ export default function Sidebar({ isAdmin, sidebarOpen, activeMenu, setActiveMen
                     <button
                         onClick={() => setActiveMenu(menu.name)}
                         className={`flex items-center p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 ${activeMenu === menu.name
-                                ? 'bg-blue-100 dark:bg-gray-600 text-blue-600 dark:text-gray-200'
-                                : 'text-gray-600 dark:text-gray-300'
+                            ? 'bg-blue-100 dark:bg-gray-600 text-blue-600 dark:text-gray-200'
+                            : 'text-gray-600 dark:text-gray-300'
                             }`}
                     >
                         <menu.icon className="w-6 h-6" />

@@ -1,6 +1,107 @@
+import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config";
+
 export default function MemberTable() {
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedMember, setSelectedMember] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/all-members`);
+                if (!response.ok) throw new Error("Gagal mengambil data");
+                const data = await response.json();
+                setMembers(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const formatDate = (dateString) => {
+        const options = { day: "numeric", month: "short", year: "numeric" };
+        return new Date(dateString).toLocaleDateString("id-ID", options);
+    };
+
+    const handleVerification = async (memberId, status) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/members/${memberId}/verify`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ status_verifikasi: status }),
+            });
+
+            if (!response.ok) throw new Error("Gagal memperbarui status");
+
+            setMembers(members.map(member =>
+                member.id === memberId ? { ...member, status_verifikasi: status } : member
+            ));
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    };
+
+    const totalPages = Math.ceil(members.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentMembers = members.slice(startIndex, startIndex + itemsPerPage);
+
+    const nextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+    const prevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+
+    if (loading) return <div className="p-6 text-gray-500">Memuat data...</div>;
+    if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+            {/* Modal Detail */}
+            {selectedMember && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-700 rounded-lg p-6 max-w-2xl w-full">
+                        <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Detail Member</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {Object.entries(selectedMember).map(([key, value]) => (
+                                key !== "id" && key !== "user_id" && key !== "catatan" && (
+                                    <div key={key}>
+                                        <label className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                                            {key.replace(/_/g, ' ')}:
+                                        </label>
+                                        <div className="mt-1 text-gray-900 dark:text-gray-200">
+                                            {value || "-"}
+                                            {(key === "file_sk" || key === "bukti_pembayaran") && value && (
+                                                <a
+                                                    href={`${API_BASE_URL}${value}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ml-2 text-blue-600 hover:underline"
+                                                >
+                                                    (Lihat)
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setSelectedMember(null)}
+                            className="mt-6 px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Tabel */}
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold dark:text-gray-100">Daftar Member Baru</h3>
                 <div className="flex space-x-2">
@@ -25,27 +126,67 @@ export default function MemberTable() {
                     </tr>
                 </thead>
                 <tbody>
-                    {[1, 2, 3].map((item) => (
-                        <tr key={item} className="border-t dark:border-gray-700">
-                            <td className="py-3 px-4 dark:text-gray-300">John Doe</td>
-                            <td className="py-3 px-4 dark:text-gray-300">12 Jan 2023</td>
+                    {currentMembers.map((member) => (
+                        <tr key={member.id} className="border-t dark:border-gray-700">
+                            <td className="py-3 px-4 dark:text-gray-300">{member.nama_pembayar}</td>
+                            <td className="py-3 px-4 dark:text-gray-300">{formatDate(member.tanggal_submit)}</td>
                             <td className="py-3 px-4">
-                                <span className="bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full text-xs dark:bg-yellow-800 dark:text-yellow-200">
-                                    Pending
+                                <span
+                                    className={`px-2 py-1 rounded-full text-xs ${member.status_verifikasi === "PENDING"
+                                            ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-800 dark:text-yellow-200"
+                                            : member.status_verifikasi === "DITERIMA"
+                                                ? "bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-200"
+                                                : "bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-200"
+                                        }`}
+                                >
+                                    {member.status_verifikasi}
                                 </span>
                             </td>
                             <td className="py-3 px-4">
-                                <button className="text-blue-600 hover:underline mr-3 dark:text-blue-400">
+                                <button
+                                    onClick={() => setSelectedMember(member)}
+                                    className="text-blue-600 hover:underline mr-3 dark:text-blue-400"
+                                >
                                     Detail
                                 </button>
-                                <button className="text-green-600 hover:underline dark:text-green-400">
-                                    Aktifkan
+                                <button
+                                    onClick={() => handleVerification(member.id, "DITERIMA")}
+                                    className="text-green-600 hover:underline mr-3 dark:text-green-400"
+                                >
+                                    Diterima
+                                </button>
+                                <button
+                                    onClick={() => handleVerification(member.id, "DITOLAK")}
+                                    className="text-red-600 hover:underline dark:text-red-400"
+                                >
+                                    Tolak
                                 </button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-4">
+                <button
+                    onClick={prevPage}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 dark:bg-gray-700 dark:text-gray-300 disabled:opacity-50"
+                >
+                    Previous
+                </button>
+                <span className="text-sm dark:text-gray-300">
+                    Halaman {currentPage} dari {totalPages}
+                </span>
+                <button
+                    onClick={nextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 dark:bg-gray-700 dark:text-gray-300 disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 }

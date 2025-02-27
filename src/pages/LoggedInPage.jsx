@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
+import { API_BASE_URL } from "../config";
 
 const LoggedInPage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
     const [isVerified, setIsVerified] = useState(false);
     const navigate = useNavigate();
+    const user_id = localStorage.getItem("user_id");
 
     useEffect(() => {
         const checkLoginStatus = () => {
@@ -22,7 +25,6 @@ const LoggedInPage = () => {
                 setUserData(null);
             }
 
-            // Cek status verifikasi
             setIsVerified(verificationStatus === "verified");
         };
 
@@ -38,8 +40,44 @@ const LoggedInPage = () => {
         navigate('/login');
     };
 
-    const handleGetStarted = () => {
-        navigate("/membership-registration");
+    const handleGetStarted = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/members/checkMemberSubmission`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ user_id }),
+            });
+
+            const data = await response.json();
+
+            if (data.status === "PENDING") {
+                Swal.fire({
+                    title: "Formulir Sedang Diverifikasi",
+                    text: "Anda sudah mengirim formulir sebelumnya, silakan tunggu sampai diverifikasi. Terima kasih.",
+                    icon: "info",
+                    confirmButtonText: "OK",
+                });
+            } else if (data.status === "DITOLAK") {
+                Swal.fire({
+                    title: "Formulir Ditolak",
+                    text: "Anda ditolak Sat!",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                });
+            } else {
+                navigate("/membership-registration");
+            }
+        } catch (error) {
+            console.error("Error checking member submission:", error);
+            Swal.fire({
+                title: "Error",
+                text: "Terjadi kesalahan saat memeriksa status pendaftaran.",
+                icon: "error",
+                confirmButtonText: "OK",
+            });
+        }
     };
 
     const handleDashboard = () => {
@@ -91,21 +129,10 @@ const LoggedInPage = () => {
 
             <main className="pt-28">
                 <section className="flex flex-col items-center justify-center h-screen text-gray-800">
-                    <motion.h1 initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-5xl text-white font-bold text-center">
-                        Welcome to ICCN
-                    </motion.h1>
-                    <motion.p initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-4 text-lg text-center text-gray-100">
-                        Your journey starts here. Explore our services and get started today!
-                    </motion.p>
-
-                    <button onClick={handleGetStarted} className="mt-6 bg-sky-500 text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 duration-200">
-                        Daftar Member
-                    </button>
-
-                    <button onClick={handleDashboard} className={`mt-6 px-6 py-2 rounded-lg shadow-md transition duration-200 ${isVerified ? "bg-sky-400 text-white hover:scale-105" : "bg-gray-400 text-gray-300 cursor-not-allowed"
-                        }`} disabled={!isVerified}>
-                        Dashboard Member
-                    </button>
+                    <motion.h1 initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-5xl text-white font-bold text-center">Welcome to ICCN</motion.h1>
+                    <motion.p initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-4 text-lg text-center text-gray-100">Your journey starts here. Explore our services and get started today!</motion.p>
+                    <button onClick={handleGetStarted} className="mt-6 bg-sky-500 text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 duration-200">Daftar Member</button>
+                    <button onClick={handleDashboard} className={`mt-6 px-6 py-2 rounded-lg shadow-md transition duration-200 ${isVerified ? "bg-sky-400 text-white hover:scale-105" : "bg-gray-400 text-gray-300 cursor-not-allowed"}`} disabled={!isVerified}>Dashboard Member</button>
                 </section>
             </main>
         </div>

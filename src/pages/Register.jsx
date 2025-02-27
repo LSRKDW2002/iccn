@@ -72,7 +72,6 @@ export default function Register() {
                     <h2 className="text-2xl font-bold mb-4">Daftar Berhasil</h2>
                     <p className="text-sm text-gray-300">
                         Silakan verifikasi email Anda untuk melanjutkan ke login.
-                        Jika sudah verifikasi, silakan login.
                     </p>
                     <p className="text-sm text-gray-300 mt-4">
                         Anda akan dialihkan ke halaman login dalam{" "}
@@ -84,84 +83,88 @@ export default function Register() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-800 to-blue-500">
             <Navbar />
+
             <motion.div
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30"
+                className="flex items-center justify-center h-screen"
             >
-                {/* Tombol Kembali (Arrow Back) */}
-                <button
-                    onClick={() => navigate("/")}
-                    className="absolute top-4 left-4 text-white hover:text-blue-300 transition-all"
-                >
-                    <FaArrowLeft size={20} />
-                </button>
-
-                <h2 className="text-3xl font-bold text-center text-white mb-6">Daftar</h2>
-
-                {error && <p className="text-red-400 text-center mb-4 text-sm">{error}</p>}
-
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="relative">
-                        <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
-                        <input
-                            type="text"
-                            placeholder="Username"
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="relative">
-                        <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
-                        <input
-                            type="email"
-                            placeholder="Email"
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="relative">
-                        <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Password"
-                            className="w-full pl-10 pr-12 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                        <button
-                            type="button"
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
-                            onClick={() => setShowPassword(!showPassword)}
-                        >
-                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                        </button>
-                    </div>
-
-                    <motion.button
-                        type="submit"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full py-2 text-white font-semibold bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg hover:shadow-lg transition-transform"
+                <div className="relative backdrop-blur-lg bg-white/10 p-8 rounded-xl shadow-xl w-96 border border-white/30">
+                    <button
+                        onClick={() => navigate("/")}
+                        className="absolute top-4 left-4 text-white hover:text-blue-300 transition-all"
                     >
-                        Register
-                    </motion.button>
-                </form>
+                        <FaArrowLeft size={20} />
+                    </button>
 
-                <p className="text-center text-white mt-4">
-                    Sudah punya akun?{" "}
-                    <a href="/login" className="text-blue-300 font-bold hover:underline">Login</a>
-                </p>
+                    <h2 className="text-3xl font-bold text-center text-white mb-6">Daftar</h2>
+
+                    {error && <p className="text-red-400 text-center mb-4 text-sm">{error}</p>}
+
+                    <form onSubmit={handleRegister} className="space-y-4">
+                        <div className="relative">
+                            <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
+                            <input
+                                type="text"
+                                placeholder="Username"
+                                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Password"
+                                className="w-full pl-10 pr-12 py-2 rounded-lg bg-white/20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                        </div>
+
+                        <motion.button
+                            type="submit"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full py-2 text-white font-semibold bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg hover:shadow-lg transition-transform"
+                        >
+                            Daftar
+                        </motion.button>
+                    </form>
+
+                    <p className="text-center text-white mt-4">
+                        Sudah punya akun?{" "}
+                        <a href="/login" className="text-blue-300 font-bold hover:underline">
+                            Login
+                        </a>
+                    </p>
+                </div>
             </motion.div>
         </div>
     );

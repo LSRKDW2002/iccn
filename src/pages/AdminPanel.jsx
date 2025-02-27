@@ -62,7 +62,7 @@ export default function AdminPanel() {
                     {activeMenu === 'Aktivasi Member' && <MemberTable />}
                     {activeMenu === 'Kelola Berita' && <NewsTable />}
                     {activeMenu === 'Galeri Kegiatan' && <Gallery />}
-                    {activeMenu === 'Laporan Member' && <MemberTable />}
+                    {/* {activeMenu === 'Laporan Member' && <MemberTable />} */}
                     {activeMenu === 'Laporan Keuangan' && <FinanceReport />}
                     {activeMenu === 'Pengeluaran' && <ExpenseTable />}
                     {activeMenu === 'Akunting' && <AccountingTable />}
